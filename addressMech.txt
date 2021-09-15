@@ -1,0 +1,9 @@
+if supabase address table has fullName row as not null for the user signed in
+
+    then show the address and highlight the option to pick up from different address
+
+        if different pick up address option is selected
+
+            then show the form to input different address and save it to address in supabase also proceeding with the same address for current address
+    
+else show form to input new address and save it to address table in supabase also proceeding with the same address for current address
