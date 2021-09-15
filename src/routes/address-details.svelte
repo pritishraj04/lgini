@@ -8,6 +8,7 @@
   import { servicesStore } from "$lib/stores";
   import supabase from "$lib/db";
   import { session } from "$app/stores";
+  import { onMount } from "svelte";
   const user = supabase.auth.user();
   const userAdd = async () => {
     let { data, error } = await supabase
@@ -21,11 +22,6 @@
     }
   };
   let userAddress = userAdd();
-  if ($servicesStore.orderAddress === {}) {
-    if (browser) {
-      goto("/edit-address-details");
-    }
-  }
   const handleServices = async () => {
     const { data, error } = await supabase.from("orders").insert([
       {
@@ -67,6 +63,23 @@
       goto("/checkout");
     }
   }
+  onMount(async () => {
+    const res = await userAddress;
+    $servicesStore.orderAddress.Name = res[0].Name;
+    $servicesStore.orderAddress["Street Address"] = res[0].streetAdd;
+    $servicesStore.orderAddress.City = res[0].localArea;
+    $servicesStore.orderAddress.Pincode = res[0].pincode;
+    $servicesStore.orderAddress["Primmary Mobile Number"] = res[0].priPhone;
+    $servicesStore.orderAddress["Secondary Mobile Number"] = res[0].secPhone;
+    console.log(res[0]);
+    if ($servicesStore.orderAddress["Primmary Mobile Number"] === null) {
+      console.log("ran");
+      if (browser) {
+        goto("/edit-address-details");
+      }
+    }
+  });
+
   let y = 0;
 </script>
 
@@ -119,14 +132,6 @@
                       Secondary Mobile Number: {userAddress[0].secPhone}
                     </p>
                   {/if}
-                  {($servicesStore.orderAddress = {
-                    Name: userAddress[0].name,
-                    "Street Address": userAddress[0].streetAdd,
-                    City: userAddress[0].localArea,
-                    Pincode: userAddress[0].pincode,
-                    "Primmary Mobile Number": userAddress[0].priPhone,
-                    "Secondary Mobile Number": userAddress[0].secPhone,
-                  })}
                   <p class="text-center">
                     <button
                       on:click={() => {

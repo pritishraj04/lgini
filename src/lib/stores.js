@@ -9,5 +9,12 @@ export let servicesStore = writable({
   "Steam Press": false,
   Starching: false,
   Date: undefined,
-  orderAddress: {},
+  orderAddress: {
+    Name: null,
+    "Street Address": null,
+    City: null,
+    Pincode: null,
+    "Primmary Mobile Number": null,
+    "Secondary Mobile Number": null,
+  },
 });

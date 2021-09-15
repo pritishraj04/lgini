@@ -23,7 +23,6 @@
     if (browser) {
       goto("/");
     }
-    console.log(user, session, error);
   };
   let y = 0;
 </script>
