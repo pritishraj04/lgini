@@ -21,11 +21,11 @@
     }
   };
   let userAddress = userAdd();
-  // if (userAddress[0].priPhone === null) {
-  //   if (browser) {
-  //     goto("/edit-address-details");
-  //   }
-  // }
+  if (userAddress[0].priPhone === null) {
+    if (browser) {
+      goto("/edit-address-details");
+    }
+  }
   const handleServices = async () => {
     const { data, error } = await supabase.from("orders").insert([
       {
