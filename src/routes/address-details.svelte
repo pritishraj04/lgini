@@ -9,24 +9,41 @@
   import supabase from "$lib/db";
   import { session } from "$app/stores";
   const user = supabase.auth.user();
-  let fullName,
-    enteredStreetAdd,
-    enteredLocalArea,
-    enteredPincode,
-    enteredPriPhone,
-    enteredSecPhone;
-  const handleServices = async () => {
-    const { data, error } = await supabase
+  const userAdd = async () => {
+    let { data, error } = await supabase
       .from("addressData")
-      .update({
-        name: fullName,
-        streetAdd: enteredStreetAdd,
-        localArea: enteredLocalArea,
-        pincode: enteredPincode,
-        priPhone: enteredPriPhone,
-        secPhone: enteredSecPhone,
-      })
-      .match({ addressOf: user.id });
+      .select("*")
+      .eq("addressOf", user.id);
+    if (data) {
+      return data;
+    } else {
+      console.log(error);
+    }
+  };
+  let userAddress = userAdd();
+  // if (userAddress[0].priPhone === null) {
+  //   if (browser) {
+  //     goto("/edit-address-details");
+  //   }
+  // }
+  const handleServices = async () => {
+    const { data, error } = await supabase.from("orders").insert([
+      {
+        services: {
+          "Dry Clean": $servicesStore["Dry Clean"],
+          "Wash & Fold": $servicesStore["Wash & Fold"],
+          "Wash & Iron": $servicesStore["Wash & Iron"],
+          "Premium Laundry": $servicesStore["Premium Laundry"],
+          "Shoe Cleaning": $servicesStore["Shoe Cleaning"],
+          "Steam Press": $servicesStore["Steam Press"],
+          Starching: $servicesStore.Starching,
+        },
+        address: $servicesStore.orderAddress,
+        pickup_date: $servicesStore.Date,
+        ordered_by: user.id,
+        status: "In-Process",
+      },
+    ]);
     if (browser) {
       goto("/confirmation");
     }
@@ -72,104 +89,72 @@
     </div>
     <div class="row">
       <div class="col-12 col-lg-8 offset-lg-2">
-        <div class="dtr-form dtr-p-50 dtr-rounded-xl bg-white bx-shwd">
-          <form
-            id="contactform"
-            on:submit|preventDefault={handleServices}
-            method="post"
-          >
-            <fieldset>
-              <p>
-                <input
-                  name="name"
-                  class="required name"
-                  type="text"
-                  id="name"
-                  placeholder="Full Name"
-                  bind:value={fullName}
-                />
+        {#await userAddress}
+          <p>...Loading</p>
+        {:then userAddress}
+          {#if userAddress[0].priPhone != null}
+            <div
+              class="dtr-form dtr-p-50 dtr-mb-30 dtr-rounded-xl bg-white bx-shwd"
+            >
+              <div>
+                <fieldset>
+                  <h6>Current Address:</h6>
+                  <p>
+                    Name: {userAddress[0].name}
+                  </p>
+                  <p>
+                    Street Address: {userAddress[0].streetAdd}
+                  </p>
+                  <p>
+                    City: {userAddress[0].localArea}
+                  </p>
+                  <p>
+                    Pincode: {userAddress[0].pincode}
+                  </p>
+                  <p>
+                    Primmary Mobile Number: {userAddress[0].priPhone}
+                  </p>
+                  {#if userAddress[0].secPhone != null}
+                    <p>
+                      Secondary Mobile Number: {userAddress[0].secPhone}
+                    </p>
+                  {/if}
+                  {($servicesStore.orderAddress = {
+                    Name: userAddress[0].name,
+                    "Street Address": userAddress[0].streetAdd,
+                    City: userAddress[0].localArea,
+                    Pincode: userAddress[0].pincode,
+                    "Primmary Mobile Number": userAddress[0].priPhone,
+                    "Secondary Mobile Number": userAddress[0].secPhone,
+                  })}
+                  <p class="text-center">
+                    <button
+                      on:click={() => {
+                        if (browser) {
+                          goto("/edit-address-details");
+                        }
+                      }}
+                      class="dtr-btn dtr-btn-styled btn-red dtr-mt-20"
+                      >Edit Address</button
+                    >
+                    <button
+                      on:click={handleServices}
+                      class="dtr-btn dtr-btn-styled btn-red dtr-mt-20"
+                      >Place Order with Current Address</button
+                    >
+                  </p>
+                  <div id="result" />
+                </fieldset>
+              </div>
+              <p class="footertext text-center">
+                *Avoid refreshing the page here. Refreshing the page here will
+                redirect you to Services Page.
               </p>
-              <p>
-                <input
-                  name="streetAdd"
-                  class="required streetAdd"
-                  type="text"
-                  id="streetAdd"
-                  placeholder="Street Address, Flat Number, House Number"
-                  bind:value={enteredStreetAdd}
-                />
-              </p>
-              <p>
-                <input
-                  name="localArea"
-                  class="required localArea"
-                  type="text"
-                  id="localArea"
-                  placeholder="City, State, District"
-                  bind:value={enteredLocalArea}
-                />
-              </p>
-              <p>
-                <input
-                  name="pincode"
-                  class="required pincode"
-                  type="number"
-                  min="100000"
-                  max="999999"
-                  id="pincode"
-                  oninvalid="this.setCustomValidity('Enter a Valid 6-digit Pincode')"
-                  placeholder="Pincode"
-                  bind:value={enteredPincode}
-                />
-              </p>
-              <p>
-                <input
-                  name="priPhone"
-                  class="required priPhone"
-                  type="number"
-                  id="priPhone"
-                  min="1000000000"
-                  max="9999999999"
-                  oninvalid="this.setCustomValidity('Enter a Valid 10-digit Phone Number')"
-                  placeholder="Primary Phone number"
-                  bind:value={enteredPriPhone}
-                />
-              </p>
-              <p>
-                <input
-                  name="secPhone"
-                  class="required secPhone"
-                  type="number"
-                  id="secPhone"
-                  min="1000000000"
-                  max="9999999999"
-                  oninvalid="this.setCustomValidity('Enter a Valid 10-digit Phone Number')"
-                  placeholder="Secondary Phone Number (Optional)"
-                  bind:value={enteredSecPhone}
-                />
-              </p>
-              <p class="text-center">
-                {#if (fullName && enteredStreetAdd && enteredLocalArea && enteredPincode && enteredPriPhone) != undefined}
-                  <button
-                    class="dtr-btn dtr-btn-styled btn-red dtr-mt-20"
-                    type="submit">Place Order</button
-                  >
-                {:else}
-                  <button
-                    disabled
-                    class="dtr-btn dtr-btn-styled btn-red dtr-mt-20"
-                    type="submit">Proceed</button
-                  >
-                {/if}
-              </p>
-              <div id="result" />
-            </fieldset>
-          </form>
-          <p class="footertext text-center">
-            *Avoid refreshing the page here. Refreshing the page here will
-            redirect you to Services Page.
-          </p>
-        </div>
+            </div>
+          {/if}
+        {:catch error}
+          <p>{error}</p>
+        {/await}
       </div>
     </div>
   </div>

@@ -22,6 +22,9 @@
     const { data, err } = await supabase
       .from("userData")
       .insert([{ user_id: user.id, email: userEmail }]);
+    const { Data, erro } = await supabase
+      .from("addressData")
+      .insert([{ addressOf: user.id }]);
     goto("/");
   };
   let y = 0;

@@ -14,7 +14,10 @@
 
   const user = supabase.auth.user();
   const userD = async () => {
-    const { data, error } = await supabase.from("userData").select("*");
+    const { data, error } = await supabase
+      .from("userData")
+      .select("*")
+      .eq("user_id", user.id);
     if (data) {
       return data;
     } else {
@@ -50,7 +53,11 @@
             {#await userData}
               <p>...waiting</p>
             {:then userData}
-              <h3 class="color-blue">{userData[0].Name}</h3>
+              {#if userData[0].Name === null}
+                <h3 class="color-blue">User</h3>
+              {:else}
+                <h3 class="color-blue">{userData[0].Name}</h3>
+              {/if}
               <button
                 class="dtr-btn-small signout-btn"
                 on:click|preventDefault={handleSignout}>Sign Out</button
