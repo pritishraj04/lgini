@@ -21,7 +21,7 @@
     }
   };
   let userAddress = userAdd();
-  if (userAddress[0].priPhone === null) {
+  if ($servicesStore.orderAddress === {}) {
     if (browser) {
       goto("/edit-address-details");
     }
@@ -161,14 +161,6 @@
 </section>
 
 <style>
-  input::-webkit-inner-spin-button,
-  input::-webkit-outer-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-  }
-  input[type="number"] {
-    -moz-appearance: textfield;
-  }
   .bx-shwd {
     box-shadow: 0px 5px 15px 0px rgb(0 0 0 / 10%);
   }
