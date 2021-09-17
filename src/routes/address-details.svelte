@@ -9,6 +9,7 @@
   import supabase from "$lib/db";
   import { session } from "$app/stores";
   import { onMount } from "svelte";
+  import { debug } from "svelte/internal";
   const user = supabase.auth.user();
   const userAdd = async () => {
     let { data, error } = await supabase
@@ -37,7 +38,7 @@
         address: $servicesStore.orderAddress,
         pickup_date: $servicesStore.Date,
         ordered_by: user.id,
-        status: "In-Process",
+        status: "Order received",
       },
     ]);
     if (browser) {
@@ -65,15 +66,13 @@
   }
   onMount(async () => {
     const res = await userAddress;
-    $servicesStore.orderAddress.Name = res[0].Name;
+    $servicesStore.orderAddress.Name = res[0].name;
     $servicesStore.orderAddress["Street Address"] = res[0].streetAdd;
     $servicesStore.orderAddress.City = res[0].localArea;
     $servicesStore.orderAddress.Pincode = res[0].pincode;
     $servicesStore.orderAddress["Primmary Mobile Number"] = res[0].priPhone;
     $servicesStore.orderAddress["Secondary Mobile Number"] = res[0].secPhone;
-    console.log(res[0]);
     if ($servicesStore.orderAddress["Primmary Mobile Number"] === null) {
-      console.log("ran");
       if (browser) {
         goto("/edit-address-details");
       }
@@ -158,7 +157,7 @@
             </div>
           {/if}
         {:catch error}
-          <p>{error}</p>
+          <p style="color: red">{error.message}</p>
         {/await}
       </div>
     </div>

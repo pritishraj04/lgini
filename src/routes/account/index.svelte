@@ -6,10 +6,10 @@
   import { session } from "$app/stores";
   import supabase from "$lib/db";
   import { goto } from "$app/navigation";
+  import { fade } from "svelte/transition";
   const handleSignout = async () => {
     let { error } = await supabase.auth.signOut();
     goto("/");
-    console.log(error);
   };
 
   const user = supabase.auth.user();
@@ -24,7 +24,20 @@
       console.log(error);
     }
   };
+  const orderD = async () => {
+    let { data, error } = await supabase
+      .from("orders")
+      .select("*")
+      .eq("ordered_by", user.id);
+    if (data) {
+      return data;
+    } else {
+      console.log(error);
+    }
+  };
+  let orderData = orderD();
   let userData = userD();
+  let isOrderShown = [];
   let y = 0;
 </script>
 
@@ -54,7 +67,10 @@
               <p>...waiting</p>
             {:then userData}
               {#if userData[0].Name === null}
-                <h3 class="color-blue">User</h3>
+                <h3 class="color-blue nouser">User</h3>
+                <p class="small-text">
+                  (Update your name using the link provded below.)
+                </p>
               {:else}
                 <h3 class="color-blue">{userData[0].Name}</h3>
               {/if}
@@ -71,7 +87,12 @@
                 {:else}
                   <tr
                     ><th>Mobile Number:</th>
-                    <td class="no-data">No User Data Found.</td></tr
+                    <td class="no-data"
+                      >No User Data Found. <p class="small-text">
+                        (Update your Mobile Number using the link provded
+                        below.)
+                      </p></td
+                    ></tr
                   >
                 {/if}
                 {#if userData[0].email != null}
@@ -82,7 +103,11 @@
                 {:else}
                   <tr
                     ><th>Email Id:</th>
-                    <td class="no-data">No User Data Found.</td></tr
+                    <td class="no-data"
+                      >No User Data Found. <p class="small-text">
+                        (Update your Email using the link provded below.)
+                      </p></td
+                    ></tr
                   >
                 {/if}
               </table>
@@ -100,97 +125,109 @@
       <!-- column 1 starts -->
       <div class="col-md-12 col-md-3">
         <!-- Heading -->
-        <h1>Ongoing Bookings</h1>
-        {#if $session === null}
-          <h6>Please <a href="/login">Login</a> to view your bookings.</h6>
-        {:else}
-          <div class="order-card dtr-mt-50 dtr-mb-50">
-            <fieldset><h5>Order No. 1</h5></fieldset>
-            <div class="order-detail">
-              <fieldset>
-                <h6>Services Selected:</h6>
-                <ul>
-                  <li><p>Wash and Iron</p></li>
-                  <li><p>DryClean</p></li>
-                </ul>
-              </fieldset>
-              <fieldset>
-                <h6>Date of pickup:</h6>
-                <ul><li><p>10/02/2022</p></li></ul>
-              </fieldset>
-              <fieldset>
-                <p class="in-progress">Status: In-progress</p>
-              </fieldset>
-            </div>
-          </div>
-        {/if}
-      </div>
-    </div>
-    <div class="row dtr-p-20 dtr-mt-50 dtr-rounded-xl bg-white bx-shwd">
-      <!-- column 1 starts -->
-      <div class="col-md-12 col-md-3">
-        <!-- Heading -->
         <h1>Bookings History</h1>
         {#if $session === null}
           <h6>Please <a href="/login">Login</a> to view your bookings.</h6>
         {:else}
-          <div class="order-card dtr-mt-50 dtr-mb-50">
-            <fieldset><h5>Order No. 1</h5></fieldset>
-            <div class="order-detail">
-              <fieldset>
-                <h6>Services Selected:</h6>
-                <ul>
-                  <li><p>Wash and Iron</p></li>
-                  <li><p>DryClean</p></li>
-                </ul>
-              </fieldset>
-              <fieldset>
-                <h6>Date of pickup:</h6>
-                <ul><li><p>10/02/2022</p></li></ul>
-              </fieldset>
-              <fieldset>
-                <p class="in-progress">Status: In-progress</p>
-              </fieldset>
-            </div>
-          </div>
-          <div class="order-card dtr-mt-50 dtr-mb-50">
-            <fieldset><h5>Order No. 2</h5></fieldset>
-            <div class="order-detail">
-              <fieldset>
-                <h6>Services Selected:</h6>
-                <ul>
-                  <li><p>Wash and Iron</p></li>
-                  <li><p>DryClean</p></li>
-                </ul>
-              </fieldset>
-              <fieldset>
-                <h6>Date of pickup:</h6>
-                <ul><li><p>10/02/2022</p></li></ul>
-              </fieldset>
-              <fieldset>
-                <p class="in-progress">Status: In-progress</p>
-              </fieldset>
-            </div>
-          </div>
-          <div class="order-card dtr-mt-50 dtr-mb-50">
-            <fieldset><h5>Order No. 3</h5></fieldset>
-            <div class="order-detail">
-              <fieldset>
-                <h6>Services Selected:</h6>
-                <ul>
-                  <li><p>Wash and Iron</p></li>
-                  <li><p>DryClean</p></li>
-                </ul>
-              </fieldset>
-              <fieldset>
-                <h6>Date of pickup:</h6>
-                <ul><li><p>10/02/2022</p></li></ul>
-              </fieldset>
-              <fieldset>
-                <p class="in-progress">Status: In-progress</p>
-              </fieldset>
-            </div>
-          </div>
+          {#await orderData}
+            Loading...
+          {:then orderData}
+            {#if orderData[0] != undefined}
+              {#each orderData as item, i (item)}
+                <div
+                  class={isOrderShown[i]
+                    ? "order-card dtr-mt-50 dtr-mb-50"
+                    : "order-card dtr-mt-10 dtr-mb-10 notShown"}
+                  on:click={() => {
+                    isOrderShown[i] = !isOrderShown[i];
+                  }}
+                >
+                  <fieldset>
+                    <h5>Order No:</h5>
+                    <p>{item.id}</p>
+                  </fieldset>
+                  {#if isOrderShown[i]}
+                    <div transition:fade class="order-detail">
+                      <fieldset>
+                        <h6>Name:</h6>
+                        <p>{item.address.Name}</p>
+                      </fieldset>
+                      <fieldset>
+                        <h6>Address:</h6>
+                        <p>
+                          {item.address["Street Address"]}, {item.address.City}, {item
+                            .address.Pincode}
+                        </p>
+                      </fieldset>
+                      <fieldset>
+                        {#if item.address["Secondary Mobile Number"]}
+                          <h6>Mobile Numbers:</h6>
+                          <p>
+                            {item.address["Primmary Mobile Number"]}, {item
+                              .address["Secondary Mobile Number"]}
+                          </p>
+                        {:else}
+                          <h6>Mobile Number:</h6>
+                          <p>
+                            {item.address["Primmary Mobile Number"]}
+                          </p>
+                        {/if}
+                      </fieldset>
+                      <fieldset>
+                        <h6>Services Selected:</h6>
+                        <ul>
+                          {#each Object.entries(item.services) as [serv, isServ]}
+                            {#if isServ}
+                              <li><p>{serv}</p></li>
+                            {/if}
+                          {/each}
+                        </ul>
+                      </fieldset>
+                      <fieldset>
+                        <h6>Date of pickup:</h6>
+                        <p>{item.pickup_date}</p>
+                      </fieldset>
+                      <fieldset>
+                        {#if item.status === "Order received"}
+                          <p class="order-blue">Status: {item.status}</p>
+                        {:else if item.status === "Picked Up"}
+                          <p class="order-yellow">Status: {item.status}</p>
+                        {:else if item.status === "Cancled"}
+                          <p class="order-red">Status: {item.status}</p>
+                        {:else if item.status === "Completed"}
+                          <p class="order-green">Status: {item.status}</p>
+                        {:else}
+                          <p>Status: {item.status}</p>
+                        {/if}
+                      </fieldset>
+                    </div>
+                  {:else}
+                    <fieldset>
+                      <h6>Date of pickup:</h6>
+                      <p>{item.pickup_date}</p>
+                    </fieldset>
+                    <fieldset>
+                      {#if item.status === "Order received"}
+                        <p class="order-blue">Status: {item.status}</p>
+                      {:else if item.status === "Picked Up"}
+                        <p class="order-yellow">Status: {item.status}</p>
+                      {:else if item.status === "Cancled"}
+                        <p class="order-red">Status: {item.status}</p>
+                      {:else if item.status === "Completed"}
+                        <p class="order-green">Status: {item.status}</p>
+                      {:else}
+                        <p>Status: {item.status}</p>
+                      {/if}
+                    </fieldset>
+                  {/if}
+                </div>
+              {/each}
+            {:else}
+              <fieldset><p>No Order history found</p></fieldset>
+            {/if}
+          {:catch error}
+            <p style="color: red">{error.message}</p>
+          {/await}
         {/if}
       </div>
     </div>
@@ -200,8 +237,16 @@
 <style lang="scss">
   .no-data {
     background: orangered;
-    padding: 0.2em;
+    padding: 0.2em 0.5em;
     border-radius: 2px;
+    display: inline-block;
+  }
+  .nouser {
+    display: inline-block;
+  }
+  .small-text {
+    display: inline-block;
+    font-size: 10px;
   }
   table {
     padding: 0.5em;
@@ -235,20 +280,45 @@
   ul {
     background: #f3f3f3;
     border-radius: 5px;
-    list-style: none;
+    list-style: inside;
   }
   ul li {
     padding-left: 10px;
   }
-  .in-progress {
-    color: rgb(112, 224, 0);
+  .order-blue {
+    color: rgb(28, 141, 247);
+  }
+  .order-yellow {
+    color: rgb(218, 214, 2);
+  }
+  .order-red {
+    color: rgb(226, 21, 6);
+  }
+  .order-green {
+    color: rgb(112, 190, 10);
   }
   .order-card {
     background-color: #f8f8f8;
     padding: 10px;
     border-radius: 10px;
+    transition: all 0.5s;
+    cursor: pointer;
   }
   .order-card .order-detail {
     padding-left: 30px;
+  }
+  fieldset {
+    margin-bottom: 15px;
+  }
+  fieldset h6,
+  fieldset h5,
+  fieldset p {
+    display: unset;
+  }
+  .notShown {
+    display: flex;
+    justify-content: space-around;
+    padding-top: 40px;
+    flex-wrap: wrap;
   }
 </style>
