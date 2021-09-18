@@ -7,6 +7,7 @@
   import { session } from "$app/stores";
   import { browser } from "$app/env";
   import { goto } from "$app/navigation";
+  import { notifications } from "$lib/notification";
 
   let userEmail, userPassword;
 
@@ -19,9 +20,17 @@
       email: userEmail,
       password: userPassword,
     });
-    $session = supaSession;
-    if (browser) {
-      goto("/");
+    if (user != null) {
+      $session = supaSession;
+      if (browser) {
+        goto("/");
+        notifications.success(
+          `Succesfully Logged in with email ${userEmail}`,
+          2000
+        );
+      }
+    } else {
+      notifications.danger(error.message, 5000);
     }
   };
   let y = 0;

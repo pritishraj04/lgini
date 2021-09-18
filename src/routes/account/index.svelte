@@ -7,9 +7,15 @@
   import supabase from "$lib/db";
   import { goto } from "$app/navigation";
   import { fade } from "svelte/transition";
+  import { notifications } from "$lib/notification";
   const handleSignout = async () => {
     let { error } = await supabase.auth.signOut();
-    goto("/");
+    if (error) {
+      notifications.danger(error.message, 1500);
+    } else {
+      notifications.success("Successfully Signed Out", 1500);
+      goto("/");
+    }
   };
 
   const user = supabase.auth.user();
@@ -33,6 +39,17 @@
       return data;
     } else {
       console.log(error);
+    }
+  };
+  const handleCancle = async (iid) => {
+    let { data, error } = await supabase
+      .from("orders")
+      .update({ status: "Cancled" })
+      .eq("id", iid);
+    if (error) {
+      notifications.warning(error.message, 1500);
+    } else {
+      notifications.success("Order cancled", 1500);
     }
   };
   let orderData = orderD();
@@ -138,9 +155,6 @@
                   class={isOrderShown[i]
                     ? "order-card dtr-mt-50 dtr-mb-50"
                     : "order-card dtr-mt-10 dtr-mb-10 notShown"}
-                  on:click={() => {
-                    isOrderShown[i] = !isOrderShown[i];
-                  }}
                 >
                   <fieldset>
                     <h5>Order No:</h5>
@@ -200,6 +214,16 @@
                           <p>Status: {item.status}</p>
                         {/if}
                       </fieldset>
+                      {#if item.status !== "Cancled" && item.status !== "Picked Up" && item.status !== "Completed"}
+                        <p class="text-center">
+                          <button
+                            class="dtr-btn dtr-btn-styled btn-red dtr-mt-20"
+                            on:click={() => {
+                              handleCancle(item.id);
+                            }}>Cancle Order</button
+                          >
+                        </p>
+                      {/if}
                     </div>
                   {:else}
                     <fieldset>
@@ -220,6 +244,13 @@
                       {/if}
                     </fieldset>
                   {/if}
+                  <span
+                    on:click={() => {
+                      isOrderShown[i] = !isOrderShown[i];
+                    }}
+                    class="arrow"
+                    style={isOrderShown[i] ? "transform: rotate(180deg);" : ""}
+                  />
                 </div>
               {/each}
             {:else}
@@ -298,11 +329,23 @@
     color: rgb(112, 190, 10);
   }
   .order-card {
+    position: relative;
     background-color: #f8f8f8;
     padding: 10px;
     border-radius: 10px;
     transition: all 0.5s;
+  }
+  .arrow {
+    position: absolute;
+    content: "";
+    width: 0;
+    height: 0;
+    right: 10px;
+    bottom: 10px;
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
     cursor: pointer;
+    border-top: 5px solid rgb(65, 65, 65);
   }
   .order-card .order-detail {
     padding-left: 30px;

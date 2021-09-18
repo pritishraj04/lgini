@@ -3,9 +3,11 @@
   import Header from "../components/Header.svelte";
   import Footer from "../components/Footer.svelte";
   import { browser } from "$app/env";
-
+  import Toast from "/src/components/Toast.svelte";
   import { session } from "$app/stores";
   import supabase from "$lib/db";
+  import { fade } from "svelte/transition";
+  import { onMount } from "svelte";
 
   if (browser) {
     $session = supabase.auth.session();
@@ -13,6 +15,15 @@
       $session = supaSession;
     });
   }
+  let loaded = false;
+  const removepreloader = () => {
+    setTimeout(() => {
+      loaded = true;
+    }, 100);
+  };
+  onMount(() => {
+    removepreloader();
+  });
 </script>
 
 <svelte:head>
@@ -47,16 +58,20 @@
 
 <div id="dtr-wrapper" class="clearfix">
   <!-- preloader starts -->
-  <!-- <div class="dtr-preloader">
-    <div class="dtr-preloader-inner">
-      <div class="dtr-preloader-img" />
+  {#if !loaded}
+    <div class="dtr-preloader" out:fade>
+      <div class="dtr-preloader-inner">
+        <div class="dtr-preloader-img" />
+      </div>
     </div>
-  </div> -->
+  {/if}
+
   <!-- preloader ends -->
   <Header />
   <!-- == main content area starts == -->
   <div id="dtr-main-content">
     <slot />
+    <Toast />
     <Footer />
   </div>
   <!-- == main content area ends == -->

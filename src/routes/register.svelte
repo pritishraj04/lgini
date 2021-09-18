@@ -6,6 +6,7 @@
   import supabase from "$lib/db";
   import { session } from "$app/stores";
   import { goto } from "$app/navigation";
+  import { notifications } from "$lib/notification";
 
   let userEmail, userPassword;
 
@@ -18,14 +19,22 @@
       email: userEmail,
       password: userPassword,
     });
-    $session = supaSession;
-    const { data, err } = await supabase
-      .from("userData")
-      .insert([{ user_id: user.id, email: userEmail }]);
-    const { Data, erro } = await supabase
-      .from("addressData")
-      .insert([{ addressOf: user.id }]);
-    goto("/");
+    if (error) {
+      notifications.danger(error.message, 5000);
+    } else {
+      $session = supaSession;
+      const { data, err } = await supabase
+        .from("userData")
+        .insert([{ user_id: user.id, email: userEmail }]);
+      const { Data, erro } = await supabase
+        .from("addressData")
+        .insert([{ addressOf: user.id }]);
+      goto("/");
+      notifications.success(
+        `Succesfully Registered with email ${userEmail}`,
+        2000
+      );
+    }
   };
   let y = 0;
 </script>
@@ -80,6 +89,7 @@
                   type="submit">Register</button
                 >
               </p>
+
               <div id="result" />
             </fieldset>
           </form>

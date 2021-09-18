@@ -8,6 +8,7 @@
   import { servicesStore } from "$lib/stores";
   import supabase from "$lib/db";
   import { session } from "$app/stores";
+  import { notifications } from "$lib/notification";
   const user = supabase.auth.user();
   let fullName,
     enteredStreetAdd,
@@ -28,8 +29,13 @@
         secPhone: enteredSecPhone,
       })
       .match({ addressOf: user.id });
-    if (browser) {
-      goto("/address-details");
+    if (error) {
+      notifications.danger(error.message, 5000);
+    } else {
+      if (browser) {
+        goto("/address-details");
+        notifications.success("User Data Updated", 2000);
+      }
     }
   };
 
